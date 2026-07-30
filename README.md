@@ -98,6 +98,17 @@ Ngưỡng độ tin cậy (confidence threshold) có thể điều chỉnh trự
 
 ---
 
+## 🖼️ Ảnh demo giao diện
+ 
+<p align="center">
+  <img src="results/demo1.png" alt="Demo giao diện đầy đủ" width="900">
+</p>
+<p align="center">
+  <img src="results/demo2.png" alt="Demo kết quả test" width="900">
+</p>
+
+---
+
 ## 📊 Về mô hình
 
 Mô hình Faster R-CNN được huấn luyện trên bộ dữ liệu Pascal VOC 2012. Dưới đây là biểu đồ quá trình huấn luyện.
