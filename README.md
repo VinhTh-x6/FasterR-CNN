@@ -8,12 +8,12 @@
 </p>
 
 <p align="center">
-  Ứng dụng demo <b>Faster R-CNN</b> cho bài toán object detection —
+  Ứng dụng <b>Faster R-CNN</b> cho bài toán object detection —
   tải ảnh hoặc video lên và nhận kết quả khoanh vùng, gán nhãn vật thể ngay trên trình duyệt.
 </p>
 
 <p align="center">
-  <img src="docs/demo-web.png" alt="Demo web" width="800">
+  <img src="results/demo3.gif" alt="Demo web" width="800">
   <br>
   <em>Demo Streamlit — tải ảnh/video lên và nhận kết quả khoanh vùng vật thể ngay lập tức.</em>
 </p>
@@ -24,16 +24,17 @@
 
 - [Giới thiệu](#-giới-thiệu)
 - [Tính năng](#-tính-năng)
-- [Cài đặt](#-cài-đặt)
+- [Cài đặt](#cai-dat)
 - [Tải checkpoint mô hình](#-tải-checkpoint-mô-hình)
-- [Chạy giao diện demo (Streamlit)](#-chạy-giao-diện-demo-streamlit)
+- [Chạy giao diện demo](#chay-giao-dien-demo)
+- [Ảnh demo giao diện](#anh-demo-giao-dien)
 - [Về mô hình](#-về-mô-hình)
 
 ---
 
 ## 📖 Giới thiệu
 
-Ứng dụng demo cho mô hình **Faster R-CNN** đã được huấn luyện trên bộ **Pascal VOC 2012**  — chỉ cần tải checkpoint, cài thư viện, và chạy giao diện Streamlit để bắt đầu nhận diện vật thể trên ảnh hoặc video. Không cần tự huấn luyện lại mô hình.
+Huấn luyện mô hình **Faster R-CNN** trên bộ **Pascal VOC 2012** và demo trên giao diện Streamlit — chỉ cần tải checkpoint, cài thư viện, và chạy giao diện Streamlit để bắt đầu nhận diện vật thể trên ảnh hoặc video. 
 
 ---
 
@@ -48,14 +49,12 @@
 
 ---
 
-## ⚙️ Cài đặt
-
-### Các bước
+## ⚙️ <a id="cai-dat"></a>Cài đặt
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/<username>/faster-rcnn-detect.git
-cd faster-rcnn-detect
+git clone https://github.com/VinhTh-x6/FasterR-CNN.git
+cd FasterR-CNN
 
 # 2. Tạo môi trường ảo
 python -m venv .venv
@@ -65,8 +64,6 @@ source .venv/bin/activate      # Linux/macOS
 # 3. Cài đặt thư viện
 pip install -r requirements.txt
 ```
-
-> Trên Windows, không cần cài `ffmpeg` riêng — `requirements.txt` đã bao gồm `imageio_ffmpeg`, tự động lo phần xuất video.
 
 ---
 
@@ -79,11 +76,9 @@ mkdir -p trained_models
 curl -L -o trained_models/best.pt <LINK_TẢI_CHECKPOINT>
 ```
 
-> Thay `<LINK_TẢI_CHECKPOINT>` bằng link thật (GitHub Releases / Google Drive / Hugging Face Hub).
-
 ---
 
-## 🖥️ Chạy giao diện demo (Streamlit)
+## 🖥️ <a id="chay-giao-dien-demo"></a>Chạy giao diện demo
 
 ```bash
 streamlit run app.py
@@ -98,7 +93,7 @@ Ngưỡng độ tin cậy (confidence threshold) có thể điều chỉnh trự
 
 ---
 
-## 🖼️ Ảnh demo giao diện
+## 🖼️ <a id="anh-demo-giao-dien"></a>Ảnh demo giao diện
  
 <p align="center">
   <img src="results/demo1.png" alt="Demo giao diện đầy đủ" width="900">
@@ -111,13 +106,20 @@ Ngưỡng độ tin cậy (confidence threshold) có thể điều chỉnh trự
 
 ## 📊 Về mô hình
 
-Mô hình Faster R-CNN được huấn luyện trên bộ dữ liệu Pascal VOC 2012. Dưới đây là biểu đồ quá trình huấn luyện.
+Mô hình Faster R-CNN được huấn luyện trên bộ dữ liệu Pascal VOC 2012. Dưới đây là các biểu đồ quá trình huấn luyện.
 
-<p align="center">
-  <img src="docs/metrics-loss.png" alt="Biểu đồ Train Loss" width="400">
-  <img src="docs/metrics-map.png" alt="Biểu đồ Val mAP" width="400">
-</p>
-<p align="center"><em>Biểu đồ Train Loss và Val mAP theo epoch.</em></p>
+<table align="center">
+  <tr>
+    <td align="center"><img src="results/result1.png" alt="Biểu đồ Train Loss" width="400"></td>
+    <td align="center"><img src="results/result2.png" alt="Biểu đồ Val mAP" width="400"></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="results/result3.png" alt="Biểu đồ Val mAP@50" width="400"></td>
+    <td align="center"><img src="results/result4.png" alt="Biểu đồ Val mAP@70" width="400"></td>
+  </tr>
+</table>
+
+<p align="center"><em>Biểu đồ Train Loss, mAP, mAP@50 và mAP@75 theo epoch.</em></p>
 
 ---
 
