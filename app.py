@@ -9,7 +9,7 @@ from load_model import load_model
 from test_image import predict_image
 from test_video import process_video
 
-# Cấu hình kỹ thuật cố định — không hiển thị cho người dùng cuối
+# Fixed technical configuration — not shown to the end user
 CHECKPOINT_PATH = "trained_models/best.pt"
 
 st.set_page_config(
@@ -21,9 +21,10 @@ st.set_page_config(
 
 # =====================================================================
 # DESIGN SYSTEM — "Viewfinder"
-# Bracket 4 góc quanh ảnh/video mô phỏng chính bounding box mà model vẽ.
-# Nền lưới mảnh kiểu blueprint gợi cảm giác công cụ kỹ thuật/thị giác
-# máy tính. Space Grotesk cho tiêu đề, JetBrains Mono cho số liệu.
+# 4 corner brackets around the image/video mimic the bounding box the
+# model draws. A thin blueprint-style grid background evokes a
+# technical/computer-vision tool feel. Space Grotesk for headings,
+# JetBrains Mono for numeric readouts.
 # =====================================================================
 st.markdown("""
 <style>
@@ -299,7 +300,7 @@ st.markdown("""
         color: var(--muted); font-family: 'JetBrains Mono', monospace; font-size: 1rem;
     }
 
-    /* panel: bọc nội dung kết quả bằng st.container(border=True) */
+    /* panel: wraps result content using st.container(border=True) */
     div[data-testid="stVerticalBlockBorderWrapper"] {
         background: var(--surface) !important;
         border: 1px solid var(--line) !important;
@@ -319,7 +320,7 @@ def tier(score):
 
 def render_detections(detections):
     if not detections:
-        st.info("Không phát hiện đối tượng nào với ngưỡng confidence hiện tại.")
+        st.info("No objects detected at the current confidence threshold.")
         return
     for d in sorted(detections, key=lambda x: x["score"], reverse=True):
         color = tier(d["score"])
@@ -335,37 +336,37 @@ def render_detections(detections):
 st.markdown("""
 <div class="hero">
     <div class="hero-badge"><span class="dot"></span> Faster R-CNN · Real-time inference</div>
-    <h1>Nhận diện vật thể<br>trong <span>một cú click</span></h1>
-    <p>Tải ảnh hoặc video lên — hệ thống tự động khoanh vùng và gán nhãn từng đối tượng.</p>
+    <h1>Object detection<br>in <span>one click</span></h1>
+    <p>Upload an image or video — the system automatically draws boxes around and labels each object.</p>
 </div>
 
 <div class="steps">
     <div class="step">
         <div class="num">01</div>
-        <div class="title">Tải file lên</div>
-        <div class="desc">Kéo thả ảnh hoặc video vào ô tương ứng bên dưới.</div>
+        <div class="title">Upload a file</div>
+        <div class="desc">Drag and drop an image or video into the field below.</div>
     </div>
     <div class="flow-arrow">→</div>
     <div class="step">
         <div class="num">02</div>
-        <div class="title">Model xử lý</div>
-        <div class="desc">Faster R-CNN khoanh vùng và gán nhãn từng đối tượng.</div>
+        <div class="title">Model processes it</div>
+        <div class="desc">Faster R-CNN locates and labels each object.</div>
     </div>
     <div class="flow-arrow">→</div>
     <div class="step">
         <div class="num">03</div>
-        <div class="title">Nhận kết quả</div>
-        <div class="desc">Xem độ tin cậy từng nhãn và tải file kết quả về máy.</div>
+        <div class="title">Get your results</div>
+        <div class="desc">View the confidence for each label and download the result file.</div>
     </div>
 </div>
 """, unsafe_allow_html=True)
 
-# ---------------- Sidebar: chỉ giữ tuỳ chọn liên quan tới trải nghiệm ----------------
+# ---------------- Sidebar: keep only options relevant to the user experience ----------------
 with st.sidebar:
     st.markdown('<p class="sb-title">Settings</p>', unsafe_allow_html=True)
     conf_threshold = st.slider(
         "Confidence threshold", 0.0, 1.0, 0.3, 0.05,
-        help="Tăng ngưỡng nếu thấy nhiều nhãn dự đoán sai."
+        help="Increase the threshold if you notice too many incorrect labels."
     )
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     st.markdown(
@@ -374,29 +375,29 @@ with st.sidebar:
     )
 
 if not os.path.exists(CHECKPOINT_PATH):
-    st.error("Không tìm thấy model. Vui lòng kiểm tra lại cấu hình hệ thống.")
+    st.error("Model not found. Please check the system configuration.")
     st.stop()
 
 @st.cache_resource
 def get_model(path, device_str):
     return load_model(path, torch.device(device_str))
 
-with st.spinner("Đang tải model..."):
+with st.spinner("Loading model..."):
     model = get_model(CHECKPOINT_PATH, str(device))
 
 tab_img, tab_video = st.tabs(["IMAGE", "VIDEO"])
 
-# ---------------- TAB ẢNH ----------------
+# ---------------- IMAGE TAB ----------------
 with tab_img:
-    uploaded_image = st.file_uploader("Kéo thả hoặc chọn ảnh", type=["jpg", "jpeg", "png", "bmp"], key="img")
+    uploaded_image = st.file_uploader("Drag and drop or select an image", type=["jpg", "jpeg", "png", "bmp"], key="img")
 
     if uploaded_image is None:
-        st.info("Chưa có ảnh nào được tải lên.")
+        st.info("No image has been uploaded yet.")
     else:
         file_bytes = np.frombuffer(uploaded_image.read(), np.uint8)
         image_bgr = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
 
-        with st.spinner("Đang dự đoán..."):
+        with st.spinner("Running prediction..."):
             t0 = time.time()
             result_bgr, detections = predict_image(model, device, image_bgr, conf_threshold)
             elapsed = time.time() - t0
@@ -425,12 +426,12 @@ with tab_img:
         st.download_button("Download result", data=buf.tobytes(),
                             file_name="prediction.jpg", mime="image/jpeg", use_container_width=True)
 
-# ---------------- TAB VIDEO ----------------
+# ---------------- VIDEO TAB ----------------
 with tab_video:
-    uploaded_video = st.file_uploader("Kéo thả hoặc chọn video", type=["mp4", "avi", "mov", "mkv"], key="vid")
+    uploaded_video = st.file_uploader("Drag and drop or select a video", type=["mp4", "avi", "mov", "mkv"], key="vid")
 
     if uploaded_video is None:
-        st.info("Chưa có video nào được tải lên.")
+        st.info("No video has been uploaded yet.")
     else:
         with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp_in:
             tmp_in.write(uploaded_video.read())
@@ -448,17 +449,17 @@ with tab_video:
             run = st.button("Run detection", use_container_width=True, type="primary")
 
             if run:
-                progress_bar = st.progress(0.0, text="Đang xử lý video...")
+                progress_bar = st.progress(0.0, text="Processing video...")
 
                 def update_progress(p):
-                    progress_bar.progress(min(p, 1.0), text=f"Đang xử lý video... {int(p * 100)}%")
+                    progress_bar.progress(min(p, 1.0), text=f"Processing video... {int(p * 100)}%")
 
                 t0 = time.time()
                 process_video(model, device, input_path, output_path, conf_threshold, update_progress)
                 elapsed = time.time() - t0
                 progress_bar.empty()
 
-                st.success(f"Xử lý xong trong {elapsed:.1f}s")
+                st.success(f"Done in {elapsed:.1f}s")
 
                 with col2:
                     st.markdown('<p class="sec-label">Detection output</p>', unsafe_allow_html=True)

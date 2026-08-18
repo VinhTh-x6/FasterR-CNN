@@ -13,15 +13,16 @@ def get_args():
     parser.add_argument("--video_path", "-v", required=True)
     parser.add_argument("--saved_checkpoint", '-o', default="trained_models/best.pt")
     parser.add_argument("--conf_threshold", "-c", type=float, default=0.3)
-    parser.add_argument("--show", action="store_true", help="Hiện cửa sổ preview (chỉ dùng khi chạy CLI)")
+    parser.add_argument("--show", action="store_true", help="Show a preview window (CLI use only)")
     return parser.parse_args()
 
 def _get_ffmpeg_exe():
     """
-    Lấy đường dẫn tới binary ffmpeg. Ưu tiên dùng imageio-ffmpeg (bundle sẵn
-    theo pip package, chạy được ngay trên Windows mà không cần cài ffmpeg
-    riêng hay sửa PATH). Nếu chưa cài imageio-ffmpeg thì fallback về lệnh
-    "ffmpeg" trong PATH hệ thống (yêu cầu người dùng tự cài).
+    Get the path to the ffmpeg binary. Prefer imageio-ffmpeg (bundled with
+    the pip package, runs immediately on Windows without needing a
+    separate ffmpeg install or PATH edit). If imageio-ffmpeg isn't
+    installed, fall back to the "ffmpeg" command on the system PATH
+    (requires the user to install it themselves).
     """
     try:
         import imageio_ffmpeg
@@ -32,36 +33,37 @@ def _get_ffmpeg_exe():
 
 def _reencode_to_h264(src_path, dst_path):
     """
-    Re-encode file video sang H.264 (yuv420p) bằng ffmpeg để trình duyệt
-    phát được. cv2.VideoWriter với fourcc 'avc1'/'h264' trên hầu hết bản
-    build opencv-python (pip) KHÔNG có encoder H.264 thật (vướng bản
-    quyền) — nó ghi ra file .mp4 hỏng dù không báo lỗi, browser sẽ hiện
-    player nhưng không phát được gì (0:00, khung đen).
+    Re-encode the video file to H.264 (yuv420p) using ffmpeg so browsers
+    can play it. cv2.VideoWriter with fourcc 'avc1'/'h264' on most
+    pip-installed opencv-python builds does NOT have a real H.264 encoder
+    (licensing constraints) — it writes a broken .mp4 file without
+    raising an error, and the browser shows a player that won't play
+    anything (stuck at 0:00, black frame).
     """
     ffmpeg_exe = _get_ffmpeg_exe()
     cmd = [
         ffmpeg_exe, "-y",
         "-i", src_path,
         "-vcodec", "libx264",
-        "-pix_fmt", "yuv420p",       # bắt buộc, nhiều trình duyệt không đọc yuv444/422
+        "-pix_fmt", "yuv420p",       # required — many browsers can't read yuv444/422
         "-preset", "fast",
         "-crf", "23",
-        "-movflags", "+faststart",   # cho phát trước khi tải xong toàn file
+        "-movflags", "+faststart",   # allows playback to start before the whole file downloads
         dst_path,
     ]
     try:
         subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     except FileNotFoundError:
         raise RuntimeError(
-            "Không tìm thấy ffmpeg. Chạy: pip install imageio-ffmpeg "
-            "(hoặc cài ffmpeg thủ công và thêm vào PATH)."
+            "ffmpeg not found. Run: pip install imageio-ffmpeg "
+            "(or install ffmpeg manually and add it to PATH)."
         )
     except subprocess.CalledProcessError as e:
-        raise RuntimeError(f"ffmpeg re-encode thất bại: {e.stderr.decode(errors='ignore')}")
+        raise RuntimeError(f"ffmpeg re-encode failed: {e.stderr.decode(errors='ignore')}")
 
 def process_video(model, device, video_path, output_path, conf_threshold=0.3,
                    progress_callback=None, show=False):
-    """Đọc video từ video_path, vẽ box lên từng frame, ghi ra output_path (H.264, phát được trên web)."""
+    """Read the video from video_path, draw boxes on each frame, and write to output_path (H.264, web-playable)."""
     cap = cv2.VideoCapture(video_path)
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
@@ -75,13 +77,13 @@ def process_video(model, device, video_path, output_path, conf_threshold=0.3,
     else:
         out_width, out_height = width, height
 
-    # Ghi ra file TẠM bằng mp4v — sẽ re-encode sang H.264 ở bước sau.
+    # Write to a TEMPORARY file using mp4v — will be re-encoded to H.264 in the next step.
     tmp_raw_path = os.path.join(tempfile.gettempdir(), f"raw_{uuid.uuid4().hex}.mp4")
     writer = cv2.VideoWriter(tmp_raw_path, cv2.VideoWriter_fourcc(*"mp4v"), fps, (out_width, out_height))
     if not writer.isOpened():
         raise RuntimeError(
-            f"Không khởi tạo được VideoWriter cho file tạm '{tmp_raw_path}'. "
-            "Kiểm tra codec mp4v có khả dụng trong bản OpenCV đang cài không."
+            f"Failed to initialize VideoWriter for temp file '{tmp_raw_path}'. "
+            "Check whether the mp4v codec is available in the installed OpenCV build."
         )
 
     frame_idx = 0
@@ -129,7 +131,7 @@ def process_video(model, device, video_path, output_path, conf_threshold=0.3,
     if show:
         cv2.destroyAllWindows()
 
-    # Re-encode file tạm sang H.264 thật rồi mới trả về output_path 
+    # Re-encode the temp file to real H.264, then return output_path
     _reencode_to_h264(tmp_raw_path, output_path)
     if os.path.exists(tmp_raw_path):
         os.remove(tmp_raw_path)

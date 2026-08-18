@@ -13,7 +13,7 @@ def get_args():
     return args
 
 def predict_image(model, device, image_bgr, conf_threshold=0.3):
-    """Nhận ảnh BGR (numpy), trả về ảnh BGR đã vẽ box + list kết quả (category, score, bbox)."""
+    """Takes a BGR image (numpy), returns the BGR image with boxes drawn + a list of results (category, score, bbox)."""
     rgb = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2RGB)
     tensor = np.transpose(rgb, (2, 0, 1)) / 255.
     image = [torch.from_numpy(tensor).float().to(device)]

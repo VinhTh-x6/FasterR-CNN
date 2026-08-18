@@ -14,7 +14,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 def get_args():
     parser = argparse.ArgumentParser(description='Train faster r-cnn model')
-    parser.add_argument('--num_epochs', '-n', type=int, default=30)
+    parser.add_argument('--num_epochs', '-n', type=int, default=50)
     parser.add_argument('--batch_size', '-b', type=int, default=4)
     parser.add_argument('--data_path', '-d', type=str, default='dataset')
     parser.add_argument('--learning_rate', '-l', type=float, default=1e-3)
